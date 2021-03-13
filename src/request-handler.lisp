@@ -180,12 +180,12 @@ customize behavior."))
 
 
 (defgeneric page-not-found-handler (app)
-  (:documentation "This function is called when the current widget 
-   heirarchy fails to parse a URL.  The default behavior simply sets the 
+  (:documentation "This function is called when the current widget
+   heirarchy fails to parse a URL.  The default behavior simply sets the
    404 return code")
   (:method ((app t))
     (declare (ignore app))
-    
+
     (immediate-response "Not found"
                         :code 404)))
 
@@ -200,7 +200,7 @@ customize behavior."))
 
 ;;   (setf *content-type*
 ;;         "application/json; charset=utf-8")
-  
+
 ;;   (let ((render-state (make-hash-table :test 'eq)))
 ;;     (labels ((circularity-warn (w)
 ;;                (when *style-warn-on-circular-dirtying*
@@ -236,7 +236,7 @@ customize behavior."))
 ;;                      do (setf weblocks::*dirty-widgets* '())
 ;;                      nconc (render-enqueued dirty))))
 ;;       (let ((rendered-widgets (absorb-dirty-widgets)))
-;;         (write 
+;;         (write
 ;;          (jonathan:to-json
 ;;           ;; For now, we are mixing old-style payload and newstyle
 ;;           (list :|widgets| rendered-widgets
@@ -253,7 +253,7 @@ customize behavior."))
 
 (defmethod handle-ajax-request ((app app))
   (log:debug "Handling AJAX request")
-  
+
   ;; (timing "handle-ajax-request"
   ;;   (render-dirty-widgets))
 
@@ -276,26 +276,27 @@ customize behavior."))
   (log:debug "Handling normal request")
 
   ;; TODO: make a macro weblocks/session-lock:with-lock
-  (with-lock-held ((get-lock))
-    ;; TODO: Probably it is good idea to remove this widget tree protocol
-    ;;       from Weblocks and leave only rendering. Because update-widget-tree
-    ;;       only collects page's title, description and keywords.
-    ;;       And they can be set during root widget rendering phase
-    ;; (handler-case (timing "tree shakedown"
-    ;;                 (update-widget-tree))
-    ;;   (weblocks::http-not-found ()
-    ;;     (return-from handle-normal-request
-    ;;       (page-not-found-handler app))))
+  ;; (with-lock-held ((get-lock))
+  ;;   ;; TODO: Probably it is good idea to remove this widget tree protocol
+  ;;   ;;       from Weblocks and leave only rendering. Because update-widget-tree
+  ;;   ;;       only collects page's title, description and keywords.
+  ;;   ;;       And they can be set during root widget rendering phase
+  ;;   ;; (handler-case (timing "tree shakedown"
+  ;;   ;;                 (update-widget-tree))
+  ;;   ;;   (weblocks::http-not-found ()
+  ;;   ;;     (return-from handle-normal-request
+  ;;   ;;       (page-not-found-handler app))))
 
-    (timing "widget tree rendering"
-      (render (weblocks/widgets/root:get))))
+  ;;   (timing "widget tree rendering"
+  ;;     (render (weblocks/widgets/root:get)))
+  ;;   )
 
   ;; render page will wrap the HTML already rendered to
   ;; weblocks.html::*stream* with necessary boilerplate HTML
   (timing "page render"
     ;; Here we are using internal symbol, because we don't want to expose
     ;; this method for usage outside of the weblocks.
-    (render-page-with-widgets app)))
+    (render-page-with-widgets-test app)))
 
 
 (defun remove-action-from-uri (uri)
@@ -313,7 +314,7 @@ customize behavior."))
 
       ;; Remove :action key from action arguments
       (remf action-arguments (make-keyword (string-upcase *action-string*)))
-      
+
       (when (pure-request-p)
         (log:debug "Request is pure, processing will be aborted.")
         ;; TODO: add with-action-hook ()
@@ -335,7 +336,7 @@ customize behavior."))
   ;; it it is not an AJAX request
   (when (and (not (ajax-request-p))
              (get-parameter *action-string*))
-    
+
     (let ((url (remove-action-from-uri
                 (get-path :with-params t))))
       (log:debug "Redirecting to an URL without action parameter" url)
@@ -363,17 +364,17 @@ customize behavior."))
     ;; TODO: write a test
     (when (null (weblocks/widgets/root:get))
       (log:debug "Initializing session")
-      (handler-bind ((error (lambda (c) 
+      (handler-bind ((error (lambda (c)
                               (when *backtrace-on-session-init-error*
                                 (let ((traceback))
                                   (log:error "Error during session initialization" traceback)))
                               (signal c))))
         (setf (weblocks/widgets/root:get)
               (weblocks/session:init app))))
-    
+
     ;; TODO: understand why there is coupling with Dialog here and
     ;;       how to move it into the Dialog's code.
-    
+
     ;; (weblocks/hooks:on-session-hook-action
     ;;     update-dialog ()
     ;;   (weblocks::update-dialog-on-request)))
@@ -392,10 +393,10 @@ customize behavior."))
             ;; weblocks::*current-page-headers*
             )
 
-        
+
         (push-dependencies
          (get-dependencies app))
-        
+
         (handle-action-if-needed app)
 
         (setf content
