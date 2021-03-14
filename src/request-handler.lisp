@@ -13,7 +13,8 @@
   (:import-from #:weblocks/utils/uri
                 #:remove-parameter-from-uri)
   (:import-from #:weblocks/page
-                #:render-page-with-widgets)
+                #:render-page-with-widgets
+		#:render-page-with-widgets-test)
   (:import-from #:weblocks/session-lock
                 #:get-lock)
   (:import-from #:weblocks/widget
@@ -290,14 +291,12 @@ customize behavior."))
   ;;   (timing "widget tree rendering"
   ;;     (render (weblocks/widgets/root:get)))
   ;;   )
-
   ;; render page will wrap the HTML already rendered to
   ;; weblocks.html::*stream* with necessary boilerplate HTML
   (timing "page render"
     ;; Here we are using internal symbol, because we don't want to expose
     ;; this method for usage outside of the weblocks.
-    (render-page-with-widgets-test app)))
-
+    (render-page-with-widgets-test (weblocks/widgets/root:get))))
 
 (defun remove-action-from-uri (uri)
   "Removes the action info from a URI."
